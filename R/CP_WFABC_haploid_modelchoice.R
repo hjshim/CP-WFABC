@@ -25,7 +25,7 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
   M0_all_max_CUSUM <- numeric(no_sim)
   M0_all_Fs <- matrix(nrow=(nb_times-1), ncol=no_sim)
   M0_all_Fs_sign <- matrix(nrow=(nb_times-1), ncol=no_sim)
-  file_M0_traj=paste("M0_sim_trajectory",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#  file_M0_traj=paste("M0_sim_trajectory",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
 
   
   # M0 Simulated trajectories with uniform prior for s1, s2, CP (and h for diploid case)
@@ -36,7 +36,7 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
       res=WF_trajectory(N,t,CP,j,t0,s_1,s_1,,s_start,ploidy,N_sample,sample_times,max_sims) 
       if((max(res$N_A2/N_sample)>=min_freq)) break
     }
-    cat(res$N_A2,"\n",sep=" ",file=file_M0_traj, append=TRUE)
+#    cat(res$N_A2,"\n",sep=" ",file=file_M0_traj, append=TRUE)
     
     M0_all_s1[m]=res$s1
     
@@ -100,7 +100,7 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
   M1_all_s1 <- numeric(no_sim)
   M1_all_s2 <- numeric(no_sim)
   M1_all_CP <- numeric(no_sim)
-  file_M1_traj=paste("M1_sim_trajectory",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#  file_M1_traj=paste("M1_sim_trajectory",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
   
   # Vectors&Matrices for summary statistics from M1 simulated trajectories
   M1_all_max_CUSUM <- numeric(no_sim)
@@ -116,7 +116,7 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
     res=WF_trajectory(N,t,CP,j,t0,s_1,s_2,,s_start,ploidy,N_sample,sample_times,max_sims) 
     if((max(res$N_A2/N_sample)>=min_freq) & (res$N_x[CP]!=N) & (res$N_x[CP]!=0)) break
     }
-    cat(res$N_A2,"\n",sep=" ",file=file_M1_traj, append=TRUE)
+#    cat(res$N_A2,"\n",sep=" ",file=file_M1_traj, append=TRUE)
     
     M1_all_s1[m]=res$s1
     M1_all_s2[m]=res$s2
