@@ -1,5 +1,6 @@
 # Example: CP_WFABC_haploid_modelchoice - detects changing selection trajectories using model choice and estimates parameters of interest (s1, s2, CP) for haploid populations -> Influenza as an example with h fixed
 source("CP_WFABC_haploid_modelchoice.R")
+main <-function(){
 N=176
 t=105
 t0=1
@@ -18,8 +19,8 @@ colnames(N_allele) <- c("1", "14", "27", "40", "53", "66", "79", "92", "105")
 N_allele <- N_allele[order(N_allele[,1]),]
 min_freq=0.02
 max_sims=1
-no_sim=10000
-best_sim=100
+no_sim=1000000
+best_sim=1000
 post_2D_M1=FALSE # require MASS package
 post_graph=TRUE
 #de novo
@@ -32,4 +33,5 @@ if(max(N_allele[,1]) > (min_freq*N_sample[1])){
     }
   }
 } 
-
+}
+main()

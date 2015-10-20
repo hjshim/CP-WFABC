@@ -3,21 +3,55 @@ source("mode.R")
 
 CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=c(),N_sample=c(),N_allele=data.frame(),min_freq=0.02,max_sims=1,no_sim=1000000,best_sim=1000,set_seed=TRUE,post_graph=FALSE,post_2D_M1=FALSE)
 {
-  # ploidy
-  ploidy <- 1
-  N <- round(N)
-  
-	# reproducible random numbers
-	if(set_seed==TRUE) { set.seed(123) }
-  nb_times <- length(sample_times)
+  original_parameters <- list(t=t,t0=t0,s_start=s_start,max_sims=max_sims,no_sim=no_sim,set_seed=set_seed)
+  data_parameters <- list(best_sim=best_sim,post_graph=post_graph,post_2D_M1=post_2D_M1)
+  initialize_parameters <- initialize_N(1,N,sample_times,N_sample,N_allele,min_freq)
 
+  result_M0 <- simulate_M0(original_parameters, initialize_parameters)
+  result_M1 <- simulate_M1(original_parameters, initialize_parameters)
+  Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
+  
+}
+  
+initialize_N<-function(ploidy,N,sample_times,N_sample,N_allele,min_freq)
+{
+  # initialize population
+  ploidy <- ploidy
+  N <- round(N)
+  nb_times <- length(sample_times)
+  
   # Initial allele frequency: de novo mutation or standing variation
   if(N_allele[1,1]/N_sample[1] < min_freq){
     j=1
   } else {
     j=round(N_allele[1,1])
   }
+  
+  list(ploidy=ploidy,N=N,sample_times=sample_times,N_sample=N_sample,N_allele=N_allele,min_freq=min_freq,nb_times=nb_times,j=j)
+}
 
+simulate_M0<-function(original_parameters, initialize_parameters)
+{
+  # name parameters for initialize_N
+  ploidy=initialize_parameters$ploidy
+  N=initialize_parameters$N
+  nb_times=initialize_parameters$nb_times
+  j=initialize_parameters$j
+  sample_times=initialize_parameters$sample_times
+  N_sample=initialize_parameters$N_sample
+  N_allele=initialize_parameters$N_allele
+  min_freq=initialize_parameters$min_freq
+  # name original parameters
+  t=original_parameters$t
+  t0=original_parameters$t0
+  s_start=original_parameters$s_start
+  max_sims=original_parameters$max_sims
+  no_sim=original_parameters$no_sim
+  set_seed=original_parameters$set_seed
+    
+  # reproducible random numbers
+  if(set_seed==TRUE) { set.seed(123) }
+  
   # Vectors&Matrices for randomly generated inputs for M0 simulated trajectories
   M0_all_s1 <- numeric(no_sim)
   
@@ -25,8 +59,8 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
   M0_all_max_CUSUM <- numeric(no_sim)
   M0_all_Fs <- matrix(nrow=(nb_times-1), ncol=no_sim)
   M0_all_Fs_sign <- matrix(nrow=(nb_times-1), ncol=no_sim)
-#  file_M0_traj=paste("M0_sim_trajectory",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-
+  #  file_M0_traj=paste("M0_sim_trajectory",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+  
   
   # M0 Simulated trajectories with uniform prior for s1, s2, CP (and h for diploid case)
   for(m in 1:no_sim){
@@ -36,7 +70,7 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
       res=WF_trajectory(N,t,CP,j,t0,s_1,s_1,,s_start,ploidy,N_sample,sample_times,max_sims) 
       if((max(res$N_A2/N_sample)>=min_freq)) break
     }
-#    cat(res$N_A2,"\n",sep=" ",file=file_M0_traj, append=TRUE)
+    #    cat(res$N_A2,"\n",sep=" ",file=file_M0_traj, append=TRUE)
     
     M0_all_s1[m]=res$s1
     
@@ -81,20 +115,42 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
   }
   
   # Simulated: output files
-  file_M0_all_s1=paste("M0_sim_trajectory_all_s1",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-  cat(M0_all_s1,sep=" ",file=file_M0_all_s1)
-  file_M0_all_max_CUSUM=paste("M0_sim_trajectory_all_max_CUSUM",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-  cat(M0_all_max_CUSUM,sep=" ",file=file_M0_all_max_CUSUM)
-  file_M0_all_Fs=paste("M0_sim_trajectory_all_Fs",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-  cat(M0_all_Fs,sep=" ",file=file_M0_all_Fs)
-  file_M0_all_Fs_sign=paste("M0_sim_trajectory_all_Fs_sign",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-  cat(M0_all_Fs_sign,sep=" ",file=file_M0_all_Fs_sign)  
-
+#   file_M0_all_s1=paste("M0_sim_trajectory_all_s1",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#   cat(M0_all_s1,sep=" ",file=file_M0_all_s1)
+#   file_M0_all_max_CUSUM=paste("M0_sim_trajectory_all_max_CUSUM",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#   cat(M0_all_max_CUSUM,sep=" ",file=file_M0_all_max_CUSUM)
+#   file_M0_all_Fs=paste("M0_sim_trajectory_all_Fs",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#   cat(M0_all_Fs,sep=" ",file=file_M0_all_Fs)
+#   file_M0_all_Fs_sign=paste("M0_sim_trajectory_all_Fs_sign",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#   cat(M0_all_Fs_sign,sep=" ",file=file_M0_all_Fs_sign)  
+  
   # M0 Simulated: prior graphs
   pdf(paste("M0_prior_s1",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
   plot(density(M0_all_s1),lwd=2,main=paste("M0: Ne=",N,"; s1 prior"),xlab="s1")
   dev.off()
+
+  list(M0_all_Fs=M0_all_Fs,M0_all_Fs_sign=M0_all_Fs_sign,M0_all_max_CUSUM=M0_all_max_CUSUM,M0_all_s1=M0_all_s1)
+}
+
   
+simulate_M1<-function(original_parameters, initialize_parameters)
+{
+  # name parameters for initialize_N
+  ploidy=initialize_parameters$ploidy
+  N=initialize_parameters$N
+  nb_times=initialize_parameters$nb_times
+  j=initialize_parameters$j
+  sample_times=initialize_parameters$sample_times
+  N_sample=initialize_parameters$N_sample
+  N_allele=initialize_parameters$N_allele
+  min_freq=initialize_parameters$min_freq
+  # name original parameters
+  t=original_parameters$t
+  t0=original_parameters$t0
+  s_start=original_parameters$s_start
+  max_sims=original_parameters$max_sims
+  no_sim=original_parameters$no_sim
+  set_seed=original_parameters$set_seed
   
   # Vectors&Matrices for randomly generated inputs for M1 simulated trajectories
   M1_all_s1 <- numeric(no_sim)
@@ -163,18 +219,18 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
   }
   
   # M1 Simulated: output files
-  file_M1_all_s1=paste("M1_sim_trajectory_all_s1",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-  cat(M1_all_s1,sep=" ",file=file_M1_all_s1)
-  file_M1_all_s2=paste("M1_sim_trajectory_all_s2",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-  cat(M1_all_s2,sep=" ",file=file_M1_all_s2)
-  file_M1_all_CP=paste("M1_sim_trajectory_all_CP",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-  cat(M1_all_CP,sep=" ",file=file_M1_all_CP)
-  file_M1_all_max_CUSUM=paste("M1_sim_trajectory_all_max_CUSUM",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-  cat(M1_all_max_CUSUM,sep=" ",file=file_M1_all_max_CUSUM)
-  file_M1_all_Fs=paste("M1_sim_trajectory_all_Fs",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-  cat(M1_all_Fs,sep=" ",file=file_M1_all_Fs)
-  file_M1_all_Fs_sign=paste("M1_sim_trajectory_all_Fs_sign",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
-  cat(M1_all_Fs_sign,sep=" ",file=file_M1_all_Fs_sign)
+#   file_M1_all_s1=paste("M1_sim_trajectory_all_s1",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#   cat(M1_all_s1,sep=" ",file=file_M1_all_s1)
+#   file_M1_all_s2=paste("M1_sim_trajectory_all_s2",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#   cat(M1_all_s2,sep=" ",file=file_M1_all_s2)
+#   file_M1_all_CP=paste("M1_sim_trajectory_all_CP",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#   cat(M1_all_CP,sep=" ",file=file_M1_all_CP)
+#   file_M1_all_max_CUSUM=paste("M1_sim_trajectory_all_max_CUSUM",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#   cat(M1_all_max_CUSUM,sep=" ",file=file_M1_all_max_CUSUM)
+#   file_M1_all_Fs=paste("M1_sim_trajectory_all_Fs",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#   cat(M1_all_Fs,sep=" ",file=file_M1_all_Fs)
+#   file_M1_all_Fs_sign=paste("M1_sim_trajectory_all_Fs_sign",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+#   cat(M1_all_Fs_sign,sep=" ",file=file_M1_all_Fs_sign)
   
   # M1 Simulated: prior graphs
   pdf(paste("M1_prior_s1",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
@@ -186,7 +242,46 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
   pdf(paste("M1_prior_CP",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
   plot(density(M1_all_CP),lwd=2,main=paste("M1: Ne=",N,"; CP prior"),xlab="CP")
   dev.off()
+
+  list(M1_all_Fs=M1_all_Fs,M1_all_Fs_sign=M1_all_Fs_sign,M1_all_max_CUSUM=M1_all_max_CUSUM,M1_all_s1=M1_all_s1,M1_all_s2=M1_all_s2,M1_all_CP=M1_all_CP)
+}  
+
+
+calculate_Data<-function(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
+{
+  # name parameters for initialize_N
+  ploidy=initialize_parameters$ploidy
+  N=initialize_parameters$N
+  nb_times=initialize_parameters$nb_times
+  j=initialize_parameters$j
+  sample_times=initialize_parameters$sample_times
+  N_sample=initialize_parameters$N_sample
+  N_allele=initialize_parameters$N_allele
+  min_freq=initialize_parameters$min_freq
+  # name original parameters
+  t=original_parameters$t
+  t0=original_parameters$t0
+  s_start=original_parameters$s_start
+  max_sims=original_parameters$max_sims
+  no_sim=original_parameters$no_sim
+  set_seed=original_parameters$set_seed
+  # name Data parameters
+  best_sim=data_parameters$best_sim
+  post_graph=data_parameters$post_graph
+  post_2D_M1=data_parameters$post_2D_M1
   
+  # name results M0
+  M0_all_Fs=result_M0$M0_all_Fs
+  M0_all_Fs_sign=result_M0$M0_all_Fs_sign
+  M0_all_max_CUSUM=result_M0$M0_all_max_CUSUM
+  M0_all_s1=result_M0$M0_all_s1
+  # name results M1
+  M1_all_Fs=result_M1$M1_all_Fs
+  M1_all_Fs_sign=result_M1$M1_all_Fs_sign
+  M1_all_max_CUSUM=result_M1$M1_all_max_CUSUM
+  M1_all_s1=result_M1$M1_all_s1
+  M1_all_s2=result_M1$M1_all_s2
+  M1_all_CP=result_M1$M1_all_CP
   
   # Summary of model choice & parameter inference result
   file_result=paste("Summary",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
