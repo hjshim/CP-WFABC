@@ -3,13 +3,28 @@ source("mode.R")
 
 CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=c(),N_sample=c(),N_allele=data.frame(),min_freq=0.02,max_sims=1,no_sim=1000000,best_sim=1000,set_seed=TRUE,post_graph=FALSE,post_2D_M1=FALSE)
 {
+  
   original_parameters <- list(t=t,t0=t0,s_start=s_start,max_sims=max_sims,no_sim=no_sim,set_seed=set_seed)
   data_parameters <- list(best_sim=best_sim,post_graph=post_graph,post_2D_M1=post_2D_M1)
-  initialize_parameters <- initialize_N(1,N,sample_times,N_sample,N_allele,min_freq)
-
-  result_M0 <- simulate_M0(original_parameters, initialize_parameters)
-  result_M1 <- simulate_M1(original_parameters, initialize_parameters)
-  Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
+  
+  #de novo
+  if(length(which(N_allele[,1]<(min_freq*N_sample[1])))!=0){
+    initialize_parameters <- initialize_N(1,N,sample_times,N_sample,N_allele[which(N_allele[,1]<(min_freq*N_sample[1])),],min_freq)
+    result_M0 <- simulate_M0(original_parameters, initialize_parameters)
+    result_M1 <- simulate_M1(original_parameters, initialize_parameters)
+    Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
+  }
+  #standing
+  if(max(N_allele[,1]) > (min_freq*N_sample[1])){
+    for (n_s in (min_freq*N_sample[1]):max(N_allele[,1])){
+      if(length(N_allele[which(N_allele[,1]==n_s),1]) != 0){
+        initialize_parameters <- initialize_N(1,N,sample_times,N_sample,N_allele[which(N_allele[,1]==n_s),],min_freq)
+        result_M0 <- simulate_M0(original_parameters, initialize_parameters)
+        result_M1 <- simulate_M1(original_parameters, initialize_parameters)
+        Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
+      }
+    }
+  }
   
 }
   
@@ -24,7 +39,7 @@ initialize_N<-function(ploidy,N,sample_times,N_sample,N_allele,min_freq)
   if(N_allele[1,1]/N_sample[1] < min_freq){
     j=1
   } else {
-    j=round(N_allele[1,1])
+    j=round((N_allele[1,1]/N_sample[1])*N)
   }
   
   list(ploidy=ploidy,N=N,sample_times=sample_times,N_sample=N_sample,N_allele=N_allele,min_freq=min_freq,nb_times=nb_times,j=j)

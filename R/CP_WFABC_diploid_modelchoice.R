@@ -15,7 +15,7 @@ CP_WFABC_diploid_modelchoice<-function(N=1000,t=100,t0=1,h_fixed=TRUE,h_given=0.
   if(N_allele[1,1]/N_sample[1] < min_freq){
     j=1
   } else {
-    j=round(N_allele[1,1])
+    j=round((N_allele[1,1]/N_sample[1])*N)
   }
     
   # Vectors&Matrices for randomly generated inputs for M0 simulated trajectories
