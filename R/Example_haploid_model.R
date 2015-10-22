@@ -11,8 +11,8 @@ N_allele = read.table("example_haploid.txt", sep = ",", check.names=FALSE)
 rownames(N_allele) <- c("HA_48","HA_1395","NA_582","NA_823","M_147","NS_820","NP_159","PB1_33")
 min_freq=0.02
 max_sims=1
-no_sim=100000
-best_sim=100
+no_sim=1000000
+best_sim=1000
 post_2D_M1=FALSE # require MASS package
 post_graph=TRUE
 
