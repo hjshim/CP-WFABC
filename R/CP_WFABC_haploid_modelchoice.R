@@ -16,7 +16,7 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
   }
   #standing
   if(max(N_allele[,1]) > (min_freq*N_sample[1])){
-    for (n_s in (min_freq*N_sample[1]):max(N_allele[,1])){
+    for (n_s in (round(min_freq*N_sample[1])):max(N_allele[,1])){
       if(length(N_allele[which(N_allele[,1]==n_s),1]) != 0){
         initialize_parameters <- initialize_N(1,N,sample_times,N_sample,N_allele[which(N_allele[,1]==n_s),],min_freq)
         result_M0 <- simulate_M0(original_parameters, initialize_parameters)
