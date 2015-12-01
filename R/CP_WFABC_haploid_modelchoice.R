@@ -6,25 +6,29 @@ CP_WFABC_haploid_modelchoice<-function(N=1000,t=100,t0=1,s_start=1,sample_times=
   
   original_parameters <- list(t=t,t0=t0,s_start=s_start,max_sims=max_sims,no_sim=no_sim,set_seed=set_seed)
   data_parameters <- list(best_sim=best_sim,post_graph=post_graph,post_2D_M1=post_2D_M1)
-  
-  #de novo
-  if(length(which(N_allele[,1]<(min_freq*N_sample[1])))!=0){
-    initialize_parameters <- initialize_N(1,N,sample_times,N_sample,N_allele[which(N_allele[,1]<(min_freq*N_sample[1])),],min_freq)
-    result_M0 <- simulate_M0(original_parameters, initialize_parameters)
-    result_M1 <- simulate_M1(original_parameters, initialize_parameters)
-    Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
-  }
-  #standing
-  if(max(N_allele[,1]) > (min_freq*N_sample[1])){
-    for (n_s in (round(min_freq*N_sample[1])):max(N_allele[,1])){
-      if(length(N_allele[which(N_allele[,1]==n_s),1]) != 0){
-        initialize_parameters <- initialize_N(1,N,sample_times,N_sample,N_allele[which(N_allele[,1]==n_s),],min_freq)
-        result_M0 <- simulate_M0(original_parameters, initialize_parameters)
-        result_M1 <- simulate_M1(original_parameters, initialize_parameters)
-        Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
-      }
-    }
-  }
+  initialize_parameters <- initialize_N(1,N,sample_times,N_sample,N_allele,min_freq)
+  result_M0 <- simulate_M0(original_parameters, initialize_parameters)
+  result_M1 <- simulate_M1(original_parameters, initialize_parameters)
+  Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
+
+#   #de novo
+#   if(length(which(N_allele[,1]<(min_freq*N_sample[1])))!=0){
+#     initialize_parameters <- initialize_N(1,N,sample_times,N_sample,N_allele[which(N_allele[,1]<(min_freq*N_sample[1])),],min_freq)
+#     result_M0 <- simulate_M0(original_parameters, initialize_parameters)
+#     result_M1 <- simulate_M1(original_parameters, initialize_parameters)
+#     Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
+#   }
+#   #standing
+#   if(max(N_allele[,1]) > (min_freq*N_sample[1])){
+#     for (n_s in (round(min_freq*N_sample[1])):max(N_allele[,1])){
+#       if(length(N_allele[which(N_allele[,1]==n_s),1]) != 0){
+#         initialize_parameters <- initialize_N(1,N,sample_times,N_sample,N_allele[which(N_allele[,1]==n_s),],min_freq)
+#         result_M0 <- simulate_M0(original_parameters, initialize_parameters)
+#         result_M1 <- simulate_M1(original_parameters, initialize_parameters)
+#         Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
+#       }
+#     }
+#   }
   
 }
   
@@ -36,11 +40,9 @@ initialize_N<-function(ploidy,N,sample_times,N_sample,N_allele,min_freq)
   nb_times <- length(sample_times)
   
   # Initial allele frequency: de novo mutation or standing variation
-  if(N_allele[1,1]/N_sample[1] < min_freq){
-    j=1
-  } else {
-    j=round((N_allele[1,1]/N_sample[1])*N)
-  }
+  nonzero <- which(!N_allele == 0)
+  j=round((N_allele[,nonzero[1]]/N_sample[nonzero[1]])*N)
+  if(j < 1) { j=1 }
   
   list(ploidy=ploidy,N=N,sample_times=sample_times,N_sample=N_sample,N_allele=N_allele,min_freq=min_freq,nb_times=nb_times,j=j)
 }
@@ -81,7 +83,7 @@ simulate_M0<-function(original_parameters, initialize_parameters)
   for(m in 1:no_sim){
     repeat{
       s_1 <- runif(1, -1, 1)
-      CP <- floor(runif(1, 2, t-1))
+      CP <- floor(runif(1, t0+1, t-1))
       res=WF_trajectory(N,t,CP,j,t0,s_1,s_1,,s_start,ploidy,N_sample,sample_times,max_sims) 
       if((max(res$N_A2/N_sample)>=min_freq)) break
     }
@@ -183,7 +185,7 @@ simulate_M1<-function(original_parameters, initialize_parameters)
     repeat{
     s_1 <- runif(1, -1, 1)
     s_2 <- runif(1, -1, 1)
-    CP <- floor(runif(1, 2, t-1))
+    CP <- floor(runif(1, t0+1, t-1))
     res=WF_trajectory(N,t,CP,j,t0,s_1,s_2,,s_start,ploidy,N_sample,sample_times,max_sims) 
     if((max(res$N_A2/N_sample)>=min_freq) & (res$N_x[CP]!=N) & (res$N_x[CP]!=0)) break
     }
@@ -299,7 +301,7 @@ calculate_Data<-function(original_parameters,initialize_parameters,result_M0,res
   M1_all_CP=result_M1$M1_all_CP
   
   # Summary of model choice & parameter inference result
-  file_result=paste("Summary",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+  file_result=paste("Summary",N,ploidy,".txt",sep="_")
   
   # Oberved values
   for (N_a in 1:nrow(N_allele)) {    
