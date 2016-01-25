@@ -1,48 +1,34 @@
 source("WF_2s_simulator.R")
 source("mode.R")
 
-CP_WFABC_diploid_modelchoice<-function(N=1000,t=100,t0=1,h_fixed=TRUE,h_given=0.5,s_start=1,sample_times=c(),N_sample=c(),N_allele=data.frame(),min_freq=0.02,max_sims=1,no_sim=1000000,best_sim=1000,set_seed=TRUE,post_graph=FALSE,post_2D_M1=FALSE)
+CP_WFABC_diploid_modelchoice<-function(N=1000,h_fixed=TRUE,h_given=0.5,sample_times=c(),N_sample=c(),N_allele=data.frame(),min_freq=0.02,max_sims=1,no_sim=1000000,best_sim=1000,set_seed=TRUE,post_graph=FALSE,post_2D_M1=FALSE)
 {
-  
-  original_parameters <- list(t=t,t0=t0,s_start=s_start,max_sims=max_sims,no_sim=no_sim,set_seed=set_seed,h_fixed=h_fixed,h_given=h_given)
+  original_parameters <- list(max_sims=max_sims,no_sim=no_sim,set_seed=set_seed,h_fixed=h_fixed,h_given=h_given,min_freq=min_freq)
   data_parameters <- list(best_sim=best_sim,post_graph=post_graph,post_2D_M1=post_2D_M1)
-  
-  #de novo
-  if(length(which(N_allele[,1]<(min_freq*N_sample[1])))!=0){
-    initialize_parameters <- initialize_N(2,N,sample_times,N_sample,N_allele[which(N_allele[,1]<(min_freq*N_sample[1])),],min_freq)
-    result_M0 <- simulate_M0(original_parameters, initialize_parameters)
-    result_M1 <- simulate_M1(original_parameters, initialize_parameters)
-    Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
-  }
-  #standing
-  if(max(N_allele[,1]) > (min_freq*N_sample[1])){
-    for (n_s in (round(min_freq*N_sample[1])):max(N_allele[,1])){
-      if(length(N_allele[which(N_allele[,1]==n_s),1]) != 0){
-        initialize_parameters <- initialize_N(2,N,sample_times,N_sample,N_allele[which(N_allele[,1]==n_s),],min_freq)
-        result_M0 <- simulate_M0(original_parameters, initialize_parameters)
-        result_M1 <- simulate_M1(original_parameters, initialize_parameters)
-        Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)
-      }
-    }
-  }
-  
+  initialize_parameters <- initialize_N(2,N,sample_times,N_sample,N_allele)
+  result_M0 <- simulate_M0(original_parameters, initialize_parameters)
+  result_M1 <- simulate_M1(original_parameters, initialize_parameters)
+  Data_result <- calculate_Data(original_parameters,initialize_parameters,result_M0,result_M1,data_parameters)  
 }
 
-initialize_N<-function(ploidy,N,sample_times,N_sample,N_allele,min_freq)
+initialize_N<-function(ploidy,N,sample_times,N_sample,N_allele)
 {
   # initialize population
   ploidy <- ploidy
   N <- round(N)
   nb_times <- length(sample_times)
+  t <- sample_times[nb_times]
 
-  # Initial allele frequency: de novo mutation or standing variation
-  if(N_allele[1,1]/N_sample[1] < min_freq){
-    j=1
-  } else {
-    j=round((N_allele[1,1]/N_sample[1])*N)
-  }
+  # Check when sample allele is non-zero
+  nonzero <- which(!N_allele == 0)
+  t0 <- sample_times[nonzero[1]] # where allele appears with the same initial frequency as the data 
+  s_start <- sample_times[nonzero[1]] # where selection starts
   
-  list(ploidy=ploidy,N=N,sample_times=sample_times,N_sample=N_sample,N_allele=N_allele,min_freq=min_freq,nb_times=nb_times,j=j)
+  # Initial allele frequency: de novo mutation or standing variation
+  j=round((N_allele[,nonzero[1]]/N_sample[nonzero[1]])*N)
+  if(j < 1) { j=1 }
+  
+  list(ploidy=ploidy,N=N,sample_times=sample_times,N_sample=N_sample,N_allele=N_allele,nb_times=nb_times,j=j,t=t,t0=t0,s_start=s_start)
 }
 
 simulate_M0<-function(original_parameters, initialize_parameters)
@@ -55,16 +41,16 @@ simulate_M0<-function(original_parameters, initialize_parameters)
   sample_times=initialize_parameters$sample_times
   N_sample=initialize_parameters$N_sample
   N_allele=initialize_parameters$N_allele
-  min_freq=initialize_parameters$min_freq
+  t=initialize_parameters$t
+  t0=initialize_parameters$t0
+  s_start=initialize_parameters$s_start
   # name original parameters
-  t=original_parameters$t
-  t0=original_parameters$t0
-  s_start=original_parameters$s_start
   max_sims=original_parameters$max_sims
   no_sim=original_parameters$no_sim
   set_seed=original_parameters$set_seed
   h_fixed=original_parameters$h_fixed
   h_given=original_parameters$h_given
+  min_freq=original_parameters$min_freq
   
   # reproducible random numbers
   if(set_seed==TRUE) { set.seed(123) }
@@ -87,7 +73,7 @@ simulate_M0<-function(original_parameters, initialize_parameters)
   for(m in 1:no_sim){
     repeat{
       s_1 <- runif(1, -1, 1)
-      CP <- floor(runif(1, 2, t-1))
+      CP <- floor(runif(1, t0+1, t-1))
       if(h_fixed==FALSE){
         h <- sample(c(0,0.5,1),1,replace=TRUE)
       } 
@@ -156,11 +142,11 @@ simulate_M0<-function(original_parameters, initialize_parameters)
 #   cat(M0_all_Fs_sign,sep=" ",file=file_M0_all_Fs_sign)  
 
   # M0 Simulated: prior graphs
-  pdf(paste("M0_prior_s1",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
+  pdf(paste("M0_prior_s1",rownames(N_allele),".pdf",sep="_"),8,8)
   plot(density(M0_all_s1),lwd=2,main=paste("M0: Ne=",N,"; s1 prior"),xlab="s1")
   dev.off()
    if(h_fixed==FALSE){
-    pdf(paste("M0_prior_h",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
+    pdf(paste("M0_prior_h",rownames(N_allele),".pdf",sep="_"),8,8)
     barplot(c(length(which(M0_all_h==0)),length(which(M0_all_h==0.5)),length(which(M0_all_h==1))),names.arg=c("0","0.5","1"),xlab="h",main=paste("M0: Ne=",N,"; h prior"))
     dev.off()
   }
@@ -182,16 +168,19 @@ simulate_M1<-function(original_parameters, initialize_parameters)
   sample_times=initialize_parameters$sample_times
   N_sample=initialize_parameters$N_sample
   N_allele=initialize_parameters$N_allele
-  min_freq=initialize_parameters$min_freq
+  t=initialize_parameters$t
+  t0=initialize_parameters$t0
+  s_start=initialize_parameters$s_start
   # name original parameters
-  t=original_parameters$t
-  t0=original_parameters$t0
-  s_start=original_parameters$s_start
   max_sims=original_parameters$max_sims
   no_sim=original_parameters$no_sim
   set_seed=original_parameters$set_seed
   h_fixed=original_parameters$h_fixed
   h_given=original_parameters$h_given
+  min_freq=original_parameters$min_freq
+  
+  # reproducible random numbers
+  if(set_seed==TRUE) { set.seed(123) }
   
   # Vectors&Matrices for randomly generated inputs for M1 simulated trajectories
   M1_all_s1 <- numeric(no_sim)
@@ -214,7 +203,7 @@ simulate_M1<-function(original_parameters, initialize_parameters)
     repeat{
     s_1 <- runif(1, -1, 1)
     s_2 <- runif(1, -1, 1)
-    CP <- floor(runif(1, 2, t-1))
+    CP <- floor(runif(1, t0+1, t-1))
     if(h_fixed==FALSE){
       h <- sample(c(0,0.5,1),1,replace=TRUE)
     } 
@@ -289,17 +278,17 @@ simulate_M1<-function(original_parameters, initialize_parameters)
 #   cat(M1_all_Fs_sign,sep=" ",file=file_M1_all_Fs_sign)
   
   # M1 Simulated: prior graphs
-  pdf(paste("M1_prior_s1",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
+  pdf(paste("M1_prior_s1",rownames(N_allele),".pdf",sep="_"),8,8)
   plot(density(M1_all_s1),lwd=2,main=paste("M1: Ne=",N,"; s1 prior"),xlab="s1")
   dev.off()
-  pdf(paste("M1_prior_s2",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
+  pdf(paste("M1_prior_s2",rownames(N_allele),".pdf",sep="_"),8,8)
   plot(density(M1_all_s2),lwd=2,main=paste("M1: Ne=",N,"; s2 prior"),xlab="s2")
   dev.off()
-  pdf(paste("M1_prior_CP",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
+  pdf(paste("M1_prior_CP",rownames(N_allele),".pdf",sep="_"),8,8)
   plot(density(M1_all_CP),lwd=2,main=paste("M1: Ne=",N,"; CP prior"),xlab="CP")
   dev.off()
   if(h_fixed==FALSE){
-    pdf(paste("M1_prior_h",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
+    pdf(paste("M1_prior_h",rownames(N_allele),".pdf",sep="_"),8,8)
     barplot(c(length(which(M1_all_h==0)),length(which(M1_all_h==0.5)),length(which(M1_all_h==1))),names.arg=c("0","0.5","1"),xlab="h",main=paste("M1: Ne=",N,"; h prior"))
     dev.off()
   }
@@ -321,16 +310,16 @@ calculate_Data<-function(original_parameters,initialize_parameters,result_M0,res
   sample_times=initialize_parameters$sample_times
   N_sample=initialize_parameters$N_sample
   N_allele=initialize_parameters$N_allele
-  min_freq=initialize_parameters$min_freq
+  t=initialize_parameters$t
+  t0=initialize_parameters$t0
+  s_start=initialize_parameters$s_start
   # name original parameters
-  t=original_parameters$t
-  t0=original_parameters$t0
-  s_start=original_parameters$s_start
   max_sims=original_parameters$max_sims
   no_sim=original_parameters$no_sim
   set_seed=original_parameters$set_seed
   h_fixed=original_parameters$h_fixed
   h_given=original_parameters$h_given
+  min_freq=original_parameters$min_freq
   # name Data parameters
   best_sim=data_parameters$best_sim
   post_graph=data_parameters$post_graph
@@ -356,12 +345,10 @@ calculate_Data<-function(original_parameters,initialize_parameters,result_M0,res
   }
   
   # Summary of model choice & parameter inference result
-  file_result=paste("Summary",N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".txt",sep="_")
+  file_result=paste("Summary",N,ploidy,".txt",sep="_")
   
   # Oberved values
-  for (N_a in 1:nrow(N_allele)) {    
-  	# observed input
-    Allele_f <- as.numeric(N_allele[N_a,] / N_sample)
+    Allele_f <- as.numeric(N_allele / N_sample)
   	Fs <- numeric(nb_times-1)
   	Fs_sign <- numeric(nb_times-1)
   	
@@ -442,7 +429,7 @@ calculate_Data<-function(original_parameters,initialize_parameters,result_M0,res
   	
   	posterior_model1=sum(best_model==1)/best_sim
   	BF=posterior_model1/(1-posterior_model1)
-  	cat(paste(row.names(N_allele[N_a,]),"\t"),file=file_result,append=TRUE)
+  	cat(paste(row.names(N_allele),"\t"),file=file_result,append=TRUE)
   	cat(paste(round(posterior_model1,3),"\t"),file=file_result,append=TRUE)
   	cat(paste(round(BF,3),"\t"),file=file_result,append=TRUE)
     
@@ -465,8 +452,8 @@ calculate_Data<-function(original_parameters,initialize_parameters,result_M0,res
   	  cat(paste(round(M0_best_s1_mode,3),"\t"),file=file_result,append=TRUE)
   	  # Posterior graphs
   	  if(post_graph==TRUE){
-    	  pdf(paste("M0_posterior_s1",row.names(N_allele[N_a,]),N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
-    	  plot(density(t(M0_best_s1)),lwd=2,main=paste("Allele=",row.names(N_allele[N_a,]),"; BF=",signif(BF,3),"; M0: s1 posterior mode=",signif(M0_best_s1_mode,3)),xlab="s1")
+    	  pdf(paste("M0_posterior_s1",rownames(N_allele),".pdf",sep="_"),8,8)
+    	  plot(density(t(M0_best_s1)),lwd=2,main=paste("Allele=",rownames(N_allele),"; BF=",signif(BF,3),"; M0: s1 posterior mode=",signif(M0_best_s1_mode,3)),xlab="s1")
     	  dev.off()
   	  }
   	  if(h_fixed==FALSE){
@@ -475,8 +462,8 @@ calculate_Data<-function(original_parameters,initialize_parameters,result_M0,res
   	    cat(paste(round(M0_best_h_mode,3),"\t"),file=file_result,append=TRUE)
         # Posterior graphs
   	    if(post_graph==TRUE){
-    	    pdf(paste("M0_posterior_h",row.names(N_allele[N_a,]),N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
-    	    barplot(c(length(which(M0_best_h==0)),length(which(M0_best_h==0.5)),length(which(M0_best_h==1))),names.arg=c("0","0.5","1"),xlab="h",main=paste("Allele=",row.names(N_allele[N_a,]),"; BF=",signif(BF,3),"; M0: h posterior mode=",round(M0_best_h_mode,1)))
+    	    pdf(paste("M0_posterior_h",rownames(N_allele),".pdf",sep="_"),8,8)
+    	    barplot(c(length(which(M0_best_h==0)),length(which(M0_best_h==0.5)),length(which(M0_best_h==1))),names.arg=c("0","0.5","1"),xlab="h",main=paste("Allele=",rownames(N_allele),"; BF=",signif(BF,3),"; M0: h posterior mode=",round(M0_best_h_mode,1)))
     	    dev.off()
   	    }
   	  }
@@ -503,14 +490,14 @@ calculate_Data<-function(original_parameters,initialize_parameters,result_M0,res
   	  cat(paste(round(M1_best_CP_mode,3),"\t"),file=file_result,append=TRUE)
       # Posterior graphs
   	  if(post_graph==TRUE){
-    	  pdf(paste("M1_posterior_s1",row.names(N_allele[N_a,]),N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
-    	  plot(density(t(M1_best_s1)),lwd=2,main=paste("Allele=",row.names(N_allele[N_a,]),"; BF=",signif(BF,3),"; M1: s1 posterior mode=",signif(M1_best_s1_mode,3)),xlab="s1")
+    	  pdf(paste("M1_posterior_s1",rownames(N_allele),".pdf",sep="_"),8,8)
+    	  plot(density(t(M1_best_s1)),lwd=2,main=paste("Allele=",rownames(N_allele),"; BF=",signif(BF,3),"; M1: s1 posterior mode=",signif(M1_best_s1_mode,3)),xlab="s1")
     	  dev.off()
-    	  pdf(paste("M1_posterior_s2",row.names(N_allele[N_a,]),N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
-    	  plot(density(t(M1_best_s2)),lwd=2,main=paste("Allele=",row.names(N_allele[N_a,]),"; BF=",signif(BF,3),"; M1: s2 posterior mode=",signif(M1_best_s2_mode,3)),xlab="s2")
+    	  pdf(paste("M1_posterior_s2",rownames(N_allele),".pdf",sep="_"),8,8)
+    	  plot(density(t(M1_best_s2)),lwd=2,main=paste("Allele=",rownames(N_allele),"; BF=",signif(BF,3),"; M1: s2 posterior mode=",signif(M1_best_s2_mode,3)),xlab="s2")
     	  dev.off()
-    	  pdf(paste("M1_posterior_CP",row.names(N_allele[N_a,]),N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
-    	  plot(density(t(M1_best_CP)),lwd=2,main=paste("Allele=",row.names(N_allele[N_a,]),"; BF=",signif(BF,3),"; M1: CP posterior mode=",signif(M1_best_CP_mode,3)),xlab="CP")
+    	  pdf(paste("M1_posterior_CP",rownames(N_allele),".pdf",sep="_"),8,8)
+    	  plot(density(t(M1_best_CP)),lwd=2,main=paste("Allele=",rownames(N_allele),"; BF=",signif(BF,3),"; M1: CP posterior mode=",signif(M1_best_CP_mode,3)),xlab="CP")
     	  dev.off()
   	  }
   	  if(h_fixed==FALSE){
@@ -519,31 +506,29 @@ calculate_Data<-function(original_parameters,initialize_parameters,result_M0,res
   	    cat(paste(round(M1_best_h_mode,3),"\t"),file=file_result,append=TRUE)
   	    # Posterior graphs
   	    if(post_graph==TRUE){
-    	    pdf(paste("M1_posterior_h",row.names(N_allele[N_a,]),N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
-    	    barplot(c(length(which(M1_best_h==0)),length(which(M1_best_h==0.5)),length(which(M1_best_h==1))),names.arg=c("0","0.5","1"),xlab="h",main=paste("Allele=",row.names(N_allele[N_a,]),"; BF=",signif(BF,3),"; M1: h posterior mode=",round(M1_best_h_mode,1)))
+    	    pdf(paste("M1_posterior_h",rownames(N_allele),".pdf",sep="_"),8,8)
+    	    barplot(c(length(which(M1_best_h==0)),length(which(M1_best_h==0.5)),length(which(M1_best_h==1))),names.arg=c("0","0.5","1"),xlab="h",main=paste("Allele=",rownames(N_allele),"; BF=",signif(BF,3),"; M1: h posterior mode=",round(M1_best_h_mode,1)))
     	    dev.off()
   	    }
   	  }
   	  if(post_2D_M1==TRUE){
   	    library(MASS)
-  	    pdf(paste("M1_2D_posterior_s1_CP",row.names(N_allele[N_a,]),N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
+  	    pdf(paste("M1_2D_posterior_s1_CP",rownames(N_allele),".pdf",sep="_"),8,8)
   	    p <- kde2d(M1_best_s1,M1_best_CP,n=500)
-  	    image(p,xlab="s1",ylab="CP",main=paste("Allele=",row.names(N_allele[N_a,]),"; BF=",signif(BF,3),"; M1: 2D posterior for s1 and CP"))
+  	    image(p,xlab="s1",ylab="CP",main=paste("Allele=",row.names(N_allele),"; BF=",signif(BF,3),"; M1: 2D posterior for s1 and CP"))
   	    dev.off()
-  	    pdf(paste("M1_2D_posterior_s2_CP",row.names(N_allele[N_a,]),N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
+  	    pdf(paste("M1_2D_posterior_s2_CP",rownames(N_allele),".pdf",sep="_"),8,8)
   	    p <- kde2d(M1_best_s2,M1_best_CP,n=500)
-  	    image(p,xlab="s2",ylab="CP",main=paste("Allele=",row.names(N_allele[N_a,]),"; BF=",signif(BF,3),"; M1: 2D posterior for s2 and CP"))
+  	    image(p,xlab="s2",ylab="CP",main=paste("Allele=",row.names(N_allele),"; BF=",signif(BF,3),"; M1: 2D posterior for s2 and CP"))
   	    dev.off()
-  	    pdf(paste("M1_2D_posterior_s1_s2",row.names(N_allele[N_a,]),N,t,t0,j,s_start,ploidy,nb_times,min_freq,max_sims,no_sim,".pdf",sep="_"),8,8)
+  	    pdf(paste("M1_2D_posterior_s1_s2",rownames(N_allele),".pdf",sep="_"),8,8)
   	    z <- kde2d(M1_best_s1,M1_best_s2,n=500)
-  	    image(z,xlab="s1",ylab="s2",main=paste("Allele=",row.names(N_allele[N_a,]),"; BF=",signif(BF,3),"; M1: 2D posterior for s1 and s2"))
+  	    image(z,xlab="s1",ylab="s2",main=paste("Allele=",row.names(N_allele),"; BF=",signif(BF,3),"; M1: 2D posterior for s1 and s2"))
   	    dev.off()
   	  }
   	}
     
   	cat("\n",file=file_result,append=TRUE)
-  	
-  }
 }
 
 
