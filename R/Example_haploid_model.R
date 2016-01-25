@@ -2,9 +2,9 @@
 source("CP_WFABC_haploid_modelchoice.R")
 
 main <-function(){
-  N_allele = read.table("example_haploid2.txt", sep = ",", check.names=FALSE)
-  rownames(N_allele) <- c("PB1_1119","HA_1395","NP_1104","NP_1396")
-  N=226
+  N_allele = read.table("example_haploid.txt", sep = ",", check.names=FALSE)
+  rownames(N_allele) <- c("PA_2194","HA_48","HA_1395","NA_582","NA_823","M_147","NS_820","NP_159","PB1_33")
+  N=176
   sample_times=c(1, 14, 27, 40, 53, 66, 79, 92, 105, 118, 131, 144, 157)
   N_sample=rep(1000,13)
   min_freq=0.02 # ascertainment

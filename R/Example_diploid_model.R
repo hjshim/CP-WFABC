@@ -14,8 +14,8 @@ main <-function(){
   N_allele=rbind.data.frame(N_a1)
   min_freq=0.02
   max_sims=1
-  no_sim=1000000
-  best_sim=1000
+  no_sim=100000
+  best_sim=100
   post_2D_M1=FALSE # require MASS package
   post_graph=TRUE
   
