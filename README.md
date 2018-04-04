@@ -46,7 +46,6 @@ CP-WFABC v1.0
 					data given in N_allele)
 	s_start			time in generation when selection starts (s=0 
 					before s_start) (same as t0)
-}
 
 # output
 	PDFs of prior graphs for simulated parameters
@@ -72,28 +71,24 @@ CP-WFABC v1.0
 	{detects allele trajectories of changing selection from those of constant selection using ABC model choice, and jointly estimates the position of a change point as well as the strength of both corresponding selection coefficients for a haploid population using Change-Point Wright-Fisher ABC methods}
 	arguments {N,sample_times,N_sample,N_allele,min_freq,max_sims,no_sim,best_sim,set_seed,post_graph,post_2D_M1}
 		} 
-}
 
 ### Contribution guidelines ###
 
-references
+# references
 	Shim, H., Laurent, S., Matuszewski, S., Foll, M., Jeffrey D Jensen (in review) Detecting and quantifying changing selection intensities from time-sampled polymorphism data. 
 	Foll, M.*, Shim, H.*, & Jeffrey D Jensen (2014b) WFABC: A Wright-Fisher ABC-Based Approach for Inferring Effective Population Sizes and Selection Coefficients from Time-Sampled Data. Molecular Ecology Resources, 1, 87-98.
 	Foll, M., Poh, Y.-P., Renzette, N., Ferrer-Admetlla, A., Bank, C., Shim, H., Malaspinas, A.S., Ewing, G., Liu, P., Wegmann, D., Caffrey, D.R., Zeldovich, K.B., Bolon, D.N., Wang, J.P., Kowalik, T.F., Schiffer, C.A., Finberg, R.W. & Jensen, J.D. (2014a) Influenza Virus Drug Resistance: A Time-Sampled Population Genetics Perspective. PLoS Genetics, 10, e1004185.
 
 
-keyword
+# keyword
 	population genetics; fluctuating selection; change point analysis; time-sampled data; approximate Bayesian computation; Wright-Fisher model; experimental design 
 
 
-examples
+# examples
 	see Example_diploid_model.R
 	see Example_haploid_model.R
 
-
-
 ### Who do I talk to? ###
 
-packageMaintainer{
-	Hyunjin Shim (jinenstar@gmail.com)
-}
+# packageMaintainer
+	Hyunjin Shim [jinenstar@gmail.com]
