@@ -11,7 +11,7 @@ CP-WFABC v1.0{
 ### How do I get set up? ###
 
 input{
-	# variable inputs
+# variable inputs
 	N				population size (number of chromosomes: N 
 					individuals for haploids and N/2 individuals for 
 					diploids) (1000 by default)
@@ -51,7 +51,7 @@ input{
 					before s_start) (same as t0)
 }
 
-output{
+# output{
 	PDFs of prior graphs for simulated parameters
 	Text files of summary of results (SNP_name 	M1_posterior	_BF	M0_estimate_s1	(M0_estimate_h)	M1_estimate_s1	M1_estimate_ s2	M1_estimate_CP	(M1_estimate_h)) 
 	PDFs of posterior graphs of parameters of interest (if TRUE)
@@ -59,19 +59,19 @@ output{
 }
 
 functions{
-WF_2s_simulator{
+# WF_2s_simulator{
 	usage 
 	{simulates a Wright-Fisher trajectory with changing selection or constant selection}
 	arguments {N,t,fluc_t,j,t0,s1,s2,h,s_start,ploidy,N_sample,sample_times,max_sims}
 		} 
 
-CP_WFABC_diploid_modelchoice{
+# CP_WFABC_diploid_modelchoice{
 	usuage 
 	{detects allele trajectories of changing selection from those of constant selection using ABC model choice, and jointly estimates the position of a change point as well as the strength of both corresponding selection coefficients and dominance for a diploid population using Change-Point Wright-Fisher ABC methods}
 	arguments {N,h_fixed,h_given,sample_times,N_sample,N_allele,min_freq,max_sims,no_sim,best_sim,set_seed,post_graph,post_2D_M1}
 		} 
 
-CP_WFABC_haploid_modelchoice{
+# CP_WFABC_haploid_modelchoice{
 	usuage 
 	{detects allele trajectories of changing selection from those of constant selection using ABC model choice, and jointly estimates the position of a change point as well as the strength of both corresponding selection coefficients for a haploid population using Change-Point Wright-Fisher ABC methods}
 	arguments {N,sample_times,N_sample,N_allele,min_freq,max_sims,no_sim,best_sim,set_seed,post_graph,post_2D_M1}
