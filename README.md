@@ -49,9 +49,9 @@ input{
 					before s_start) (same as t0)
 }
 
-# output{
+output{
 	PDFs of prior graphs for simulated parameters
-	Text files of summary of results (SNP_name 	M1_posterior	_BF	M0_estimate_s1	(M0_estimate_h)	M1_estimate_s1	M1_estimate_ s2	M1_estimate_CP	(M1_estimate_h)) 
+	Text files of summary of results (SNP_name 	M1_posterior_BF	M0_estimate_s1	(M0_estimate_h)	M1_estimate_s1	M1_estimate_ s2	M1_estimate_CP	(M1_estimate_h)) 
 	PDFs of posterior graphs of parameters of interest (if TRUE)
 	PDFs of 2D posterior graphs of parameters of interest (if TRUE)
 }
