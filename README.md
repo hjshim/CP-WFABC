@@ -53,24 +53,18 @@ CP-WFABC v1.0
 	PDFs of posterior graphs of parameters of interest (if TRUE)
 	PDFs of 2D posterior graphs of parameters of interest (if TRUE)
 
-
-# WF_2s_simulator{
-	usage 
-	{simulates a Wright-Fisher trajectory with changing selection or constant selection}
+# WF_2s_simulator 
+	simulates a Wright-Fisher trajectory with changing selection or constant selection}
 	arguments {N,t,fluc_t,j,t0,s1,s2,h,s_start,ploidy,N_sample,sample_times,max_sims}
-		} 
 
-# CP_WFABC_diploid_modelchoice{
-	usuage 
-	{detects allele trajectories of changing selection from those of constant selection using ABC model choice, and jointly estimates the position of a change point as well as the strength of both corresponding selection coefficients and dominance for a diploid population using Change-Point Wright-Fisher ABC methods}
+# CP_WFABC_diploid_modelchoice
+	detects allele trajectories of changing selection from those of constant selection using ABC model choice, and jointly estimates the position of a change point as well as the strength of both corresponding selection coefficients and dominance for a diploid population using Change-Point Wright-Fisher ABC methods}
 	arguments {N,h_fixed,h_given,sample_times,N_sample,N_allele,min_freq,max_sims,no_sim,best_sim,set_seed,post_graph,post_2D_M1}
-		} 
 
-# CP_WFABC_haploid_modelchoice{
-	usuage 
-	{detects allele trajectories of changing selection from those of constant selection using ABC model choice, and jointly estimates the position of a change point as well as the strength of both corresponding selection coefficients for a haploid population using Change-Point Wright-Fisher ABC methods}
+# CP_WFABC_haploid_modelchoice
+	detects allele trajectories of changing selection from those of constant selection using ABC model choice, and jointly estimates the position of a change point as well as the strength of both corresponding selection coefficients for a haploid population using Change-Point Wright-Fisher ABC methods}
 	arguments {N,sample_times,N_sample,N_allele,min_freq,max_sims,no_sim,best_sim,set_seed,post_graph,post_2D_M1}
-		} 
+
 
 ### Contribution guidelines ###
 
@@ -79,14 +73,13 @@ CP-WFABC v1.0
 	Foll, M.*, Shim, H.*, & Jeffrey D Jensen (2014b) WFABC: A Wright-Fisher ABC-Based Approach for Inferring Effective Population Sizes and Selection Coefficients from Time-Sampled Data. Molecular Ecology Resources, 1, 87-98.
 	Foll, M., Poh, Y.-P., Renzette, N., Ferrer-Admetlla, A., Bank, C., Shim, H., Malaspinas, A.S., Ewing, G., Liu, P., Wegmann, D., Caffrey, D.R., Zeldovich, K.B., Bolon, D.N., Wang, J.P., Kowalik, T.F., Schiffer, C.A., Finberg, R.W. & Jensen, J.D. (2014a) Influenza Virus Drug Resistance: A Time-Sampled Population Genetics Perspective. PLoS Genetics, 10, e1004185.
 
-
 # keyword
 	population genetics; fluctuating selection; change point analysis; time-sampled data; approximate Bayesian computation; Wright-Fisher model; experimental design 
-
 
 # examples
 	see Example_diploid_model.R
 	see Example_haploid_model.R
+
 
 ### Who do I talk to? ###
 
