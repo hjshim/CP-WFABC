@@ -2,13 +2,12 @@
 
 ### What is this repository for? ###
 
-CP-WFABC v1.0{
+CP-WFABC v1.0
 	detects allele trajectories of changing selection from those of constant selection using ABC model choice, and jointly estimates the position of a change point as well as the strength of both corresponding selection coefficients (and dominance for diploid cases) using Wright-Fisher ABC methods
-}
+
 
 ### How do I get set up? ###
 
-input{
 # variable inputs
 	N				population size (number of chromosomes: N 
 					individuals for haploids and N/2 individuals for 
@@ -38,7 +37,7 @@ input{
 # fixed inputs
 	ploidy			1 for haploids, 2 for diploids
 
-# Assumptions
+# assumptions
 	j				number of SNP appearing at time t0 in the 
 					population (given as observed initial frequency 
 					in N_allele * population size, except if j<1 
@@ -49,14 +48,13 @@ input{
 					before s_start) (same as t0)
 }
 
-output{
+# output
 	PDFs of prior graphs for simulated parameters
 	Text files of summary of results (SNP_name 	M1_posterior_BF	M0_estimate_s1	(M0_estimate_h)	M1_estimate_s1	M1_estimate_ s2	M1_estimate_CP	(M1_estimate_h)) 
 	PDFs of posterior graphs of parameters of interest (if TRUE)
 	PDFs of 2D posterior graphs of parameters of interest (if TRUE)
-}
 
-functions{
+
 # WF_2s_simulator{
 	usage 
 	{simulates a Wright-Fisher trajectory with changing selection or constant selection}
@@ -78,20 +76,20 @@ functions{
 
 ### Contribution guidelines ###
 
-references{
+references
 	Shim, H., Laurent, S., Matuszewski, S., Foll, M., Jeffrey D Jensen (in review) Detecting and quantifying changing selection intensities from time-sampled polymorphism data. 
 	Foll, M.*, Shim, H.*, & Jeffrey D Jensen (2014b) WFABC: A Wright-Fisher ABC-Based Approach for Inferring Effective Population Sizes and Selection Coefficients from Time-Sampled Data. Molecular Ecology Resources, 1, 87-98.
 	Foll, M., Poh, Y.-P., Renzette, N., Ferrer-Admetlla, A., Bank, C., Shim, H., Malaspinas, A.S., Ewing, G., Liu, P., Wegmann, D., Caffrey, D.R., Zeldovich, K.B., Bolon, D.N., Wang, J.P., Kowalik, T.F., Schiffer, C.A., Finberg, R.W. & Jensen, J.D. (2014a) Influenza Virus Drug Resistance: A Time-Sampled Population Genetics Perspective. PLoS Genetics, 10, e1004185.
-}
 
-keyword{ 
+
+keyword
 	population genetics; fluctuating selection; change point analysis; time-sampled data; approximate Bayesian computation; Wright-Fisher model; experimental design 
-}
 
-examples{
+
+examples
 	see Example_diploid_model.R
 	see Example_haploid_model.R
-}
+
 
 
 ### Who do I talk to? ###
