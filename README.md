@@ -83,5 +83,5 @@ CP-WFABC v1.0
 
 ### Who do I talk to? ###
 
-# packageMaintainer
+# author and maintainer
 	Hyunjin Shim [jinenstar@gmail.com]
